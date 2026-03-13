@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#f5f7fa;color:#1a1a2e;padding:16px 12px 24px}
+
+.gk-header{background:linear-gradient(135deg,#e8f4fd,#d0e8f7);border-radius:14px;
+  padding:20px 24px;margin-bottom:16px;border:1px solid rgba(0,119,182,.27)}
+.gk-header h1{font-size:21px;font-weight:800;color:#023e8a;margin-bottom:4px}
+.gk-header p{font-size:13px;color:#0077b6}
+
+/* ── Search bar ── */
+.search-wrap{position:relative;margin-bottom:6px}
+.search-wrap input{
+  width:100%;padding:12px 40px 12px 42px;font-size:15px;
+  border:2px solid #0077b6;border-radius:12px;outline:none;
+  background:#fff;color:#1a1a2e;transition:box-shadow .15s}
+.search-wrap input:focus{box-shadow:0 0 0 3px rgba(0,119,182,.18)}
+.s-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;pointer-events:none}
+.s-clear{position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  font-size:15px;cursor:pointer;color:#888;display:none;
+  background:none;border:none;line-height:1}
+.result-badge{font-size:12px;color:#0077b6;min-height:18px;margin:4px 0 12px 3px}
+
+/* ── Section headers ── */
+.sec-head{background:linear-gradient(90deg,rgba(0,119,182,.09),rgba(0,119,182,.02));
+  border-left:4px solid #0077b6;border-radius:0 8px 8px 0;
+  padding:9px 16px;margin:22px 0 10px;
+  font-size:16px;font-weight:700;color:#023e8a}
+
+/* ── Cards grid ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:2px}
+@media(max-width:580px){.grid{grid-template-columns:1fr}}
+
+.card{background:#fff;border:1.5px solid #d0e8f7;border-radius:12px;
+  padding:15px 16px;box-shadow:0 2px 8px rgba(0,119,182,.07);display:none}
+.card.show{display:block}
+.card.top-match{border-color:#0077b6;box-shadow:0 3px 14px rgba(0,119,182,.18)}
+
+.c-title{font-size:15px;font-weight:700;color:#023e8a;margin-bottom:7px}
+.c-badge{font-size:10px;background:rgba(0,119,182,.13);color:#0077b6;
+  border-radius:10px;padding:2px 7px;margin-left:7px;vertical-align:middle;font-weight:600}
+.c-hi{font-size:13px;color:#0077b6;background:#e8f4fd;border-radius:6px;
+  padding:6px 10px;margin-bottom:7px;font-style:italic;line-height:1.6}
+.c-en{font-size:13px;color:#1a1a2e;line-height:1.6;margin-bottom:7px}
+.c-ex{font-size:12px;color:#444;background:#f0f6ff;border-radius:6px;
+  padding:6px 10px;margin-bottom:6px;line-height:1.5}
+.c-tip{font-size:12px;color:#1b6b34;background:#f0fff4;border-radius:6px;
+  padding:6px 10px;border-left:3px solid #1b9e4b;line-height:1.5}
+
+/* ── No results ── */
+.no-res{background:linear-gradient(135deg,#fff8e1,#fffaed);
+  border:2px solid #e6a817;border-radius:14px;
+  padding:26px 24px;text-align:center;display:none;margin:14px 0}
+.no-res h2{font-size:19px;color:#3d2b00;margin-bottom:8px}
+.no-res p{font-size:13px;color:#7a5c00;line-height:1.8;margin-bottom:16px}
+
+/* ── WhatsApp buttons ── */
+.wa-btn{display:inline-block;background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;font-size:14px;font-weight:700;padding:11px 24px;
+  border-radius:50px;text-decoration:none;box-shadow:0 4px 12px rgba(37,211,102,.33)}
+.wa-note{font-size:12px;color:#a07a00;margin-top:10px}
+
+.wa-bar{background:linear-gradient(135deg,#f0fff4,#e6ffee);
+  border:1px solid rgba(37,211,102,.4);border-radius:12px;
+  padding:13px 17px;margin:20px 0 6px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.wa-bar-text h3{font-size:14px;font-weight:700;color:#0a3d1a}
+.wa-bar-text p{font-size:12px;color:#1b6b34;margin-top:2px}
+.wa-btn-sm{display:inline-block;background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;font-size:13px;font-weight:700;padding:9px 20px;
+  border-radius:50px;text-decoration:none;white-space:nowrap;
+  box-shadow:0 3px 10px rgba(37,211,102,.28)}
+
+.footer{text-align:center;font-size:12px;color:#0077b6;
+  background:linear-gradient(135deg,#e8f4fd,#d0e8f7);
+  border-radius:10px;padding:13px;margin-top:14px;border:1px solid rgba(0,119,182,.18)}
+
+/* search highlight */
+mark{background:#fff176;border-radius:2px;padding:0 1px}
+</style>
+</head>
+<body>
+
+<div class="gk-header">
+  <h1>📚 Gyan Kendra — Your Stock Market Knowledge Centre</h1>
+  <p>Everything you need to understand stock markets, Nivesh AI signals, and how to invest wisely. &nbsp;🇮🇳 Hindi + English</p>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+  <span class="s-icon">🔍</span>
+  <input id="q" type="text" autocomplete="off" autofocus
+    placeholder="RSI, Bearish, P/E, MACD, FII, SIP, Consensus… टाइप करें, तुरंत देखें!"/>
+  <button class="s-clear" id="clr" onclick="clearQ()" title="Clear">✕</button>
+</div>
+<div class="result-badge" id="badge"></div>
+
+<!-- ALL CARDS – each has data-kw for JS matching -->
+<div id="root">
+
+<!-- ══ 1. Market Directions ══ -->
+<div class="sec-head" data-sec="s1">📈 Market Directions</div>
+<div class="grid" data-sec="s1">
+  <div class="card show" data-kw="bullish तेजी up rising optimistic rally rsi sma macd">
+    <div class="c-title">🟢 Bullish 📈 (तेजी)</div>
+    <div class="c-hi">🇮🇳 जब बाज़ार या स्टॉक ऊपर जा रहा हो — कीमतें बढ़ रही हों।</div>
+    <div class="c-en">When the market or stock is going <b>UP</b> — prices rising and investors are optimistic.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC rose from ₹290 to ₹310 this week — clearly bullish.</div>
+    <div class="c-tip">💡 RSI &gt; 50, price above SMA 50, MACD positive, high volume = bullish combo.</div>
+  </div>
+  <div class="card show" data-kw="bearish मंदी down falling pessimistic sell crash rsi sma macd fii">
+    <div class="c-title">🔴 Bearish 📉 (मंदी)</div>
+    <div class="c-hi">🇮🇳 जब बाज़ार या स्टॉक नीचे जा रहा हो — कीमतें गिर रही हों।</div>
+    <div class="c-en">When the market or stock is going <b>DOWN</b> — prices falling, investors pessimistic.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC fell from ₹330 to ₹300 after weak quarterly results.</div>
+    <div class="c-tip">💡 Signs: price below SMA 50, RSI below 40, MACD negative, high FII selling.</div>
+  </div>
+  <div class="card show" data-kw="sideways साइडवेज़ neutral flat range consolidation neither breakout">
+    <div class="c-title">🟡 Neutral / Sideways (साइडवेज़)</div>
+    <div class="c-hi">🇮🇳 कीमत न ऊपर न नीचे — एक रेंज में चलती रहे।</div>
+    <div class="c-en">Price moves in a flat range — market is undecided, neither up nor down.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC trading between ₹300–₹315 for 2 weeks = sideways.</div>
+    <div class="c-tip">💡 Wait for a breakout above resistance or below support before entering.</div>
+  </div>
+  <div class="card show" data-kw="rally उछाल sharp fast rise jump news results 5 percent">
+    <div class="c-title">🚀 Rally (तेज़ उछाल)</div>
+    <div class="c-hi">🇮🇳 अचानक तेज़ी से कीमत ऊपर जाना।</div>
+    <div class="c-en">A sharp, fast upward price move — often triggered by good news or strong results.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC rallied 5% after strong Q3 results.</div>
+    <div class="c-tip">💡 Rallies can be short-lived. Always check if fundamentals support the move.</div>
+  </div>
+  <div class="card show" data-kw="correction सुधार pullback dip temporary decline 5 10 percent buying opportunity">
+    <div class="c-title">📉 Correction (सुधार)</div>
+    <div class="c-hi">🇮🇳 ऊपर जाने के बाद थोड़ा नीचे आना — यह सामान्य है।</div>
+    <div class="c-en">A temporary decline after a rise — healthy and normal. Usually 5–10%.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC rose to ₹380 then corrected to ₹340 before resuming uptrend.</div>
+    <div class="c-tip">💡 Corrections are buying opportunities in fundamentally strong stocks.</div>
+  </div>
+  <div class="card show" data-kw="crash क्रैश panic 20 percent covid nifty market fall sudden">
+    <div class="c-title">💥 Crash (क्रैश)</div>
+    <div class="c-hi">🇮🇳 अचानक बड़ी गिरावट — अक्सर पैनिक की वजह से।</div>
+    <div class="c-en">A sudden 20%+ drop caused by panic, bad news, or global events.</div>
+    <div class="c-ex">📌 <b>Example:</b> Nifty crashed 30% in March 2020 due to COVID-19.</div>
+    <div class="c-tip">💡 Don't panic-sell in crashes. Strong stocks always recover over time.</div>
+  </div>
+</div>
+
+<!-- ══ 2. Technical Indicators ══ -->
+<div class="sec-head" data-sec="s2">📊 Technical Indicators</div>
+<div class="grid" data-sec="s2">
+  <div class="card show" data-kw="rsi relative strength index 30 70 oversold overbought momentum buy sell signal indicator">
+    <div class="c-title">📏 RSI — Relative Strength Index</div>
+    <div class="c-hi">🇮🇳 RSI 0–100। 30 से नीचे = oversold (सस्ता)। 70 से ऊपर = overbought (महंगा)।</div>
+    <div class="c-en">Momentum indicator on a 0–100 scale. <b>Below 30</b> = oversold (buy zone). <b>Above 70</b> = overbought (sell zone).</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC RSI = 28 → oversold → potential bounce expected.</div>
+    <div class="c-tip">💡 Wait for RSI to rise back above 30 before buying — confirms the reversal.</div>
+  </div>
+  <div class="card show" data-kw="macd moving average convergence divergence signal line crossover histogram ema 12 26">
+    <div class="c-title">📡 MACD</div>
+    <div class="c-hi">🇮🇳 MACD line signal line को ऊपर काटे = Buy। नीचे काटे = Sell।</div>
+    <div class="c-en">12-day EMA minus 26-day EMA. Crosses <b>above</b> signal = bullish. <b>Below</b> = bearish.</div>
+    <div class="c-ex">📌 <b>Example:</b> MACD crossed above signal on ITC → Buy signal triggered.</div>
+    <div class="c-tip">💡 Works best in trending markets. Gives false signals in sideways markets.</div>
+  </div>
+  <div class="card show" data-kw="sma simple moving average 20 50 200 golden cross death cross trend period">
+    <div class="c-title">📉 SMA — Simple Moving Average</div>
+    <div class="c-hi">🇮🇳 पिछले N दिनों की औसत कीमत। Price &gt; SMA 50 = uptrend।</div>
+    <div class="c-en">Average price over N days. Price <b>above SMA</b> = bullish. Classic: SMA 50 cross SMA 200 = Golden Cross.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC ₹304 &gt; SMA 50 (₹295) = price above average = bullish.</div>
+    <div class="c-tip">💡 Golden Cross (SMA 50 above SMA 200) = strong long-term buy signal.</div>
+  </div>
+  <div class="card show" data-kw="ema exponential moving average weight recent faster reaction short term">
+    <div class="c-title">⚡ EMA — Exponential Moving Average</div>
+    <div class="c-hi">🇮🇳 हाल की कीमतों को ज़्यादा वज़न — SMA से तेज़ react करता है।</div>
+    <div class="c-en">Like SMA but gives more weight to recent prices — reacts faster to changes.</div>
+    <div class="c-ex">📌 <b>Example:</b> EMA 20 reacted to ITC's drop faster than SMA 20.</div>
+    <div class="c-tip">💡 Use EMA for short-term signals, SMA for long-term trend identification.</div>
+  </div>
+  <div class="card show" data-kw="bollinger bands upper lower middle squeeze breakout overbought oversold volatility standard deviation">
+    <div class="c-title">🎯 Bollinger Bands</div>
+    <div class="c-hi">🇮🇳 तीन bands: मध्य SMA ± 2σ। ऊपरी = overbought। निचली = oversold।</div>
+    <div class="c-en">Middle SMA ± 2 std deviations. Near <b>upper band</b> = overbought. Near <b>lower band</b> = oversold.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC touched lower Bollinger Band → historically bounces from here.</div>
+    <div class="c-tip">💡 Bands narrow before big moves (squeeze). Watch for breakout direction.</div>
+  </div>
+  <div class="card show" data-kw="cci commodity channel index 100 -100 uptrend downtrend short term">
+    <div class="c-title">🧭 CCI — Commodity Channel Index</div>
+    <div class="c-hi">🇮🇳 +100 से ऊपर = strong uptrend। -100 से नीचे = strong downtrend।</div>
+    <div class="c-en">Above <b>+100</b> = strong uptrend. Below <b>−100</b> = strong downtrend.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC CCI = −120 → strong downtrend signal.</div>
+    <div class="c-tip">💡 Nivesh AI uses CCI to confirm short-term buy/sell in the Technical tab.</div>
+  </div>
+  <div class="card show" data-kw="adx average directional index strength 25 weak sideways strong trend">
+    <div class="c-title">💪 ADX — Average Directional Index</div>
+    <div class="c-hi">🇮🇳 ADX ट्रेंड की ताकत मापता है। 25+ = strong trend।</div>
+    <div class="c-en">Measures trend <b>strength</b> (not direction). Above 25 = strong. Below 20 = weak/sideways.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC ADX = 32 → strong trend (could be up or down).</div>
+    <div class="c-tip">💡 ADX tells HOW STRONG. Use with RSI/MACD for direction.</div>
+  </div>
+  <div class="card show" data-kw="volume वॉल्यूम shares traded high low conviction confirm signal">
+    <div class="c-title">📊 Volume (वॉल्यूम)</div>
+    <div class="c-hi">🇮🇳 कितने शेयर ट्रेड हुए। ज़्यादा वॉल्यूम = ज़्यादा विश्वास।</div>
+    <div class="c-en">Number of shares traded. <b>High volume + rise</b> = strong bullish. High volume + fall = strong bearish.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC rose 3% on 2× average volume → strong conviction move.</div>
+    <div class="c-tip">💡 Price moves on low volume are unreliable. Always check volume to confirm.</div>
+  </div>
+  <div class="card show" data-kw="support resistance level price bounce breakout entry exit zone key">
+    <div class="c-title">🏗️ Support &amp; Resistance</div>
+    <div class="c-hi">🇮🇳 Support = बार-बार उठता है। Resistance = बार-बार गिरता है।</div>
+    <div class="c-en"><b>Support</b> = price where stock bounces up. <b>Resistance</b> = where it falls repeatedly.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC: strong support ₹295, resistance ₹325.</div>
+    <div class="c-tip">💡 Buy near support, sell near resistance. Broken resistance becomes new support.</div>
+  </div>
+</div>
+
+<!-- ══ 3. Fundamental Terms ══ -->
+<div class="sec-head" data-sec="s3">📑 Fundamental Terms</div>
+<div class="grid" data-sec="s3">
+  <div class="card show" data-kw="pe ratio price earnings undervalued overvalued 15 30 sector valuation cheap expensive">
+    <div class="c-title">💰 P/E Ratio — Price to Earnings</div>
+    <div class="c-hi">🇮🇳 P/E = कीमत ÷ कमाई। कम = सस्ता। ज़्यादा = महंगा।</div>
+    <div class="c-en">Share Price ÷ EPS. <b>Low P/E (&lt;15)</b> = undervalued. <b>High P/E (&gt;30)</b> = expensive.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC P/E = 18.7 → fairly valued for FMCG.</div>
+    <div class="c-tip">💡 Never compare P/E across sectors. Compare only within the same industry.</div>
+  </div>
+  <div class="card show" data-kw="eps earnings per share profit net income growing quarterly">
+    <div class="c-title">💵 EPS — Earnings Per Share</div>
+    <div class="c-hi">🇮🇳 EPS = कुल कमाई ÷ कुल शेयर। जितना ज़्यादा, उतना अच्छा।</div>
+    <div class="c-en">Net Profit ÷ Total Shares. Higher EPS = more profitable per share.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC EPS ₹16.25 growing 15% yearly → positive sign.</div>
+    <div class="c-tip">💡 Look for consistently growing EPS over 3–5 years, not just one quarter.</div>
+  </div>
+  <div class="card show" data-kw="market cap capitalisation large mid small company value size 20000 crore">
+    <div class="c-title">🏢 Market Cap</div>
+    <div class="c-hi">🇮🇳 Market Cap = कीमत × कुल शेयर = कंपनी की कुल कीमत।</div>
+    <div class="c-en">Total value = Share Price × Total Shares. Large cap &gt;₹20,000 Cr. Mid ₹5,000–20,000 Cr. Small &lt;₹5,000 Cr.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC Market Cap ₹3.81T → Large cap, stable, lower risk.</div>
+    <div class="c-tip">💡 Large caps safer but slower. Small caps riskier but can give 10×.</div>
+  </div>
+  <div class="card show" data-kw="roe return equity 15 percent efficient investors buffett shareholders">
+    <div class="c-title">📈 ROE — Return on Equity</div>
+    <div class="c-hi">🇮🇳 ROE = निवेशकों के पैसे पर return। 15%+ = अच्छा।</div>
+    <div class="c-en">Net Profit ÷ Shareholders Equity. Above 15% = efficient use of investor money.</div>
+    <div class="c-ex">📌 <b>Example:</b> HDFC Bank ROE ~17% consistently → very efficient.</div>
+    <div class="c-tip">💡 Warren Buffett looks for ROE &gt; 15% consistently over 10 years.</div>
+  </div>
+  <div class="card show" data-kw="debt equity ratio de 1 2 safe risk leverage borrowing loan">
+    <div class="c-title">⚖️ Debt to Equity (D/E)</div>
+    <div class="c-hi">🇮🇳 D/E = कर्ज़ ÷ equity। 1 से कम = सुरक्षित।</div>
+    <div class="c-en">Total Debt ÷ Equity. <b>Below 1</b> = safe. <b>Above 2</b> = high risk. Zero debt = safest.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC D/E = 0.51 → very manageable debt.</div>
+    <div class="c-tip">💡 For banking stocks D/E rules differ — they naturally carry high debt.</div>
+  </div>
+  <div class="card show" data-kw="dividend yield income passive shareholder payout annual percent income">
+    <div class="c-title">💸 Dividend Yield</div>
+    <div class="c-hi">🇮🇳 कंपनी मुनाफे का हिस्सा शेयरधारकों को देती है।</div>
+    <div class="c-en">Annual Dividend ÷ Share Price × 100. Good passive income while holding the stock.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC dividend yield ~3.5% → good income while holding.</div>
+    <div class="c-tip">💡 High dividend + stable business = ideal for long-term income investors.</div>
+  </div>
+  <div class="card show" data-kw="profit margin 15 percent revenue pricing power net strong business">
+    <div class="c-title">📊 Profit Margin</div>
+    <div class="c-hi">🇮🇳 हर ₹100 की बिक्री पर कितना मुनाफा। 15%+ = बढ़िया।</div>
+    <div class="c-en">Net Profit ÷ Revenue. Above 15% = strong pricing power.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC profit margin 43.9% → exceptionally high.</div>
+    <div class="c-tip">💡 High margins mean pricing power. Benchmark: HDFC Bank, Asian Paints.</div>
+  </div>
+  <div class="card show" data-kw="beta volatility market nifty 1 low high defensive fmcg it stable">
+    <div class="c-title">📐 Beta (बीटा)</div>
+    <div class="c-hi">🇮🇳 Beta = बाज़ार की तुलना में कितना ऊपर-नीचे।</div>
+    <div class="c-en">Beta 1 = moves same as Nifty. <b>&gt;1</b> = more volatile. <b>&lt;1</b> = more stable.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC Beta ~0.5 → less volatile than Nifty — defensive stock.</div>
+    <div class="c-tip">💡 Low beta (FMCG, Pharma) safer in crashes. High beta (IT) better in bull runs.</div>
+  </div>
+</div>
+
+<!-- ══ 4. Nivesh AI Signals ══ -->
+<div class="sec-head" data-sec="s4">🔮 Nivesh AI Signals</div>
+<div class="grid" data-sec="s4">
+  <div class="card show" data-kw="consensus signal technical fundamental model prediction combine three honest recommendation">
+    <div class="c-title">🎯 Consensus Signal — What Is It?</div>
+    <div class="c-hi">🇮🇳 Technical + Fundamental + Price Model — तीनों को मिलाकर एक फैसला।</div>
+    <div class="c-en">Combines all three signals (technical, fundamental, model) into one honest recommendation.</div>
+    <div class="c-ex">📌 <b>Example:</b> Technical: Sell | Fundamental: Sell | Model: Buy → ⚠️ Mixed Signals.</div>
+    <div class="c-tip">💡 Never act on just one signal. Consensus is smarter — it considers all angles.</div>
+  </div>
+  <div class="card show" data-kw="mixed signals conflict technical sell prediction buy wait caution purple">
+    <div class="c-title">⚠️ Mixed Signals — What To Do?</div>
+    <div class="c-hi">🇮🇳 Technical Sell + Model Buy = conflict। इंतज़ार करो।</div>
+    <div class="c-en">When Technical says Sell but model says Buy — do NOT buy. Wait for signals to align.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC: Technical Sell + Model +2% → Wait for RSI &gt; 40 + MACD cross.</div>
+    <div class="c-tip">💡 In conflict: reduce position size, wait for 2 signals to agree before entering.</div>
+  </div>
+  <div class="card show" data-kw="buy signal green 2 3 signals agree upside opportunity accumulate strong">
+    <div class="c-title">🟢 Buy Signal</div>
+    <div class="c-hi">🇮🇳 कम से कम 2 संकेत Buy = Consensus Buy। अच्छा मौका।</div>
+    <div class="c-en">At least 2 of 3 signals agree stock will rise. Strongest when all 3 align + positive sentiment.</div>
+    <div class="c-ex">📌 <b>Example:</b> Technical Buy + Fundamental Buy + Model +3% = Strong Consensus Buy.</div>
+    <div class="c-tip">💡 Even on a Buy signal, use SIP — don't invest all at once.</div>
+  </div>
+  <div class="card show" data-kw="sell signal red 2 signals bearish exit avoid don't buy decline">
+    <div class="c-title">🔴 Sell Signal</div>
+    <div class="c-hi">🇮🇳 2+ संकेत Sell = बेचना या नया निवेश न करना।</div>
+    <div class="c-en">At least 2 of 3 signals say stock will fall. Don't buy new. Consider partial exit of existing.</div>
+    <div class="c-ex">📌 <b>Example:</b> Technical Sell + Fundamental Sell + bearish news = Strong Sell.</div>
+    <div class="c-tip">💡 Don't panic-sell everything. Review in 2–3 days — markets can reverse quickly.</div>
+  </div>
+  <div class="card show" data-kw="hold signal yellow amber neutral wait direction patience no clear">
+    <div class="c-title">🟡 Hold Signal</div>
+    <div class="c-hi">🇮🇳 Signals मिले-जुले = Hold। इंतज़ार करो।</div>
+    <div class="c-en">No clear direction. Best action: don't buy more, don't sell existing. Wait for clarity.</div>
+    <div class="c-ex">📌 <b>Example:</b> Technical Hold + Fundamental Buy + Model +1% = Consensus Hold.</div>
+    <div class="c-tip">💡 Hold is the most common signal. Patience is your best strategy.</div>
+  </div>
+  <div class="card show" data-kw="prediction model linear regression arima ensemble forecast statistical 55 45">
+    <div class="c-title">🔮 Price Prediction Models</div>
+    <div class="c-hi">🇮🇳 Nivesh AI: Linear Regression + ARIMA। Ensemble = सबसे भरोसेमंद।</div>
+    <div class="c-en">Two models: Linear Regression (trend) + ARIMA (time-series). Weighted average = Ensemble — most reliable.</div>
+    <div class="c-ex">📌 <b>Example:</b> LR: ₹315 | ARIMA: ₹307 | Ensemble: ₹311 → use Ensemble.</div>
+    <div class="c-tip">💡 Models use past patterns — treat predictions as probability, not certainty.</div>
+  </div>
+  <div class="card show" data-kw="sentiment score news positive negative -1 1 adjust bullish bearish">
+    <div class="c-title">📰 Sentiment Score</div>
+    <div class="c-hi">🇮🇳 Sentiment = खबरों का असर। +1 = बहुत अच्छा। -1 = बुरा।</div>
+    <div class="c-en">Score −1 to +1 measuring news tone. Applied to adjust price prediction up or down.</div>
+    <div class="c-ex">📌 <b>Example:</b> Sentiment −0.40 → prediction reduced to reflect bad news.</div>
+    <div class="c-tip">💡 High negative sentiment + good technicals = caution. Wait for news to stabilize.</div>
+  </div>
+</div>
+
+<!-- ══ 5. Investment Concepts ══ -->
+<div class="sec-head" data-sec="s5">💰 Investment Concepts</div>
+<div class="grid" data-sec="s5">
+  <div class="card show" data-kw="sip systematic investment plan monthly regular fixed amount rupees average cost dca">
+    <div class="c-title">🗓️ SIP — Systematic Investment Plan</div>
+    <div class="c-hi">🇮🇳 हर महीने थोड़ा-थोड़ा निवेश — ₹1000 हर महीने।</div>
+    <div class="c-en">Invest a fixed amount regularly. Averages buying cost over time — removes timing pressure.</div>
+    <div class="c-ex">📌 <b>Example:</b> ₹5,000/month in ITC → more shares when price low, fewer when high.</div>
+    <div class="c-tip">💡 SIP is the safest strategy for volatile stocks.</div>
+  </div>
+  <div class="card show" data-kw="fii dii foreign institutional domestic investor buying selling nifty sensex flow">
+    <div class="c-title">🌍 FII / DII Flows</div>
+    <div class="c-hi">🇮🇳 FII खरीदे = बाज़ार चढ़े। FII बेचे = बाज़ार गिरे।</div>
+    <div class="c-en">FII (Foreign) buying = bullish. FII selling = bearish. DII (Domestic) often cushions FII selling.</div>
+    <div class="c-ex">📌 <b>Example:</b> FII sold ₹5,000 Cr in March 2025 → Nifty fell 3%.</div>
+    <div class="c-tip">💡 Check FII/DII data daily on NSE website or Moneycontrol.</div>
+  </div>
+  <div class="card show" data-kw="stop loss stoploss risk management limit 5 8 percent auto sell protect">
+    <div class="c-title">🛑 Stop Loss</div>
+    <div class="c-hi">🇮🇳 एक कीमत जिससे नीचे auto-sell — नुकसान सीमित करने को।</div>
+    <div class="c-en">Pre-set price at which you auto-sell to limit loss. Essential risk management tool.</div>
+    <div class="c-ex">📌 <b>Example:</b> Buy ITC ₹310. Stop loss ₹295 (5%). Falls to ₹295 → auto-sell.</div>
+    <div class="c-tip">💡 Never invest without a stop loss. 5–8% is standard.</div>
+  </div>
+  <div class="card show" data-kw="diversification portfolio sectors spread risk stocks it fmcg bank pharma">
+    <div class="c-title">🌈 Diversification (विविधता)</div>
+    <div class="c-hi">🇮🇳 सारे पैसे एक स्टॉक में नहीं — अलग-अलग सेक्टर में बाँटो।</div>
+    <div class="c-en">Spread across sectors (IT, FMCG, Banking, Pharma) to reduce risk.</div>
+    <div class="c-ex">📌 <b>Example:</b> 25% ITC + 25% TCS + 25% HDFC Bank + 25% Sun Pharma = well diversified.</div>
+    <div class="c-tip">💡 Ideal: 8–15 stocks across 4–5 different sectors.</div>
+  </div>
+  <div class="card show" data-kw="bull run bear market sustained rise fall years nifty 7500 26000 2020 2024">
+    <div class="c-title">🐂 Bull Run / Bear Market</div>
+    <div class="c-hi">🇮🇳 Bull Run = लंबे समय बाज़ार ऊपर। Bear = 20%+ गिरावट।</div>
+    <div class="c-en">Bull Run = sustained rise over months/years. Bear Market = 20%+ fall from peak.</div>
+    <div class="c-ex">📌 <b>Example:</b> India bull run 2020–2024: Nifty 7,500 → 26,000.</div>
+    <div class="c-tip">💡 In bull run even bad stocks go up. In bear market good stocks fall — but recover faster.</div>
+  </div>
+  <div class="card show" data-kw="52 week high low annual price range value near bottom top">
+    <div class="c-title">📅 52-Week High / Low</div>
+    <div class="c-hi">🇮🇳 पिछले 52 हफ्तों में सबसे ऊंची और नीची कीमत।</div>
+    <div class="c-en">Highest and lowest price in past year. Breaking 52W high = very bullish. Near 52W low = potential value.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC 52W High ₹528, Low ₹397. Currently ₹304 → below 52W low.</div>
+    <div class="c-tip">💡 Stocks near 52W lows can be value buys — but always check WHY they fell first.</div>
+  </div>
+</div>
+
+<!-- ══ 6. Indian Market ══ -->
+<div class="sec-head" data-sec="s6">🇮🇳 Indian Market Specifics</div>
+<div class="grid" data-sec="s6">
+  <div class="card show" data-kw="nse bse national bombay stock exchange nifty sensex ns bo suffix">
+    <div class="c-title">🏛️ NSE vs BSE</div>
+    <div class="c-hi">🇮🇳 NSE = Nifty 50। BSE = Sensex।</div>
+    <div class="c-en">NSE has Nifty 50. BSE has Sensex. Most large stocks trade on both at nearly same prices.</div>
+    <div class="c-ex">📌 <b>Example:</b> ITC.NS = NSE. ITC.BO = BSE. Use .NS in Nivesh AI.</div>
+    <div class="c-tip">💡 NSE has higher liquidity and tighter spreads — prefer NSE for trading.</div>
+  </div>
+  <div class="card show" data-kw="nifty 50 sensex index top companies health barometer 22000 19000">
+    <div class="c-title">📊 Nifty 50 / Sensex</div>
+    <div class="c-hi">🇮🇳 Nifty = NSE के 50 सबसे बड़े। Sensex = BSE के 30 सबसे बड़े।</div>
+    <div class="c-en">Nifty 50 = top 50 NSE companies. Sensex = top 30 BSE. They reflect overall market health.</div>
+    <div class="c-ex">📌 <b>Example:</b> Nifty above 22,000 = healthy. Below 19,000 = market stress.</div>
+    <div class="c-tip">💡 Check Nifty trend before making any individual stock decisions.</div>
+  </div>
+  <div class="card show" data-kw="rbi repo rate reserve bank india monetary policy interest loan emi cut hike">
+    <div class="c-title">🏦 RBI &amp; Repo Rate</div>
+    <div class="c-hi">🇮🇳 Repo Rate cut = सस्ते loan = बाज़ार चढ़े। Hike = महंगे loan = गिरे।</div>
+    <div class="c-en">RBI controls monetary policy. Rate cut = cheaper loans = bullish. Rate hike = bearish.</div>
+    <div class="c-ex">📌 <b>Example:</b> RBI cuts 0.25% → home loan EMIs fall → banking stocks rise.</div>
+    <div class="c-tip">💡 RBI meets every 2 months — rate decisions move markets significantly.</div>
+  </div>
+  <div class="card show" data-kw="rupee dollar usd inr forex it export import oil weak strong tcs infosys bpcl">
+    <div class="c-title">💱 Rupee vs Dollar (USD/INR)</div>
+    <div class="c-hi">🇮🇳 रुपया कमज़ोर = IT को फायदा। Import वालों को नुकसान।</div>
+    <div class="c-en">Weak rupee benefits IT exporters (TCS, Infosys) but hurts importers (oil, pharma).</div>
+    <div class="c-ex">📌 <b>Example:</b> USD/INR 83→87 → TCS gains, BPCL loses.</div>
+    <div class="c-tip">💡 Check Nivesh AI Global News for rupee movement and its impact on your stock.</div>
+  </div>
+  <div class="card show" data-kw="geopolitical war oil iran israel russia ukraine middle east india inflation impact crude">
+    <div class="c-title">🌍 Geopolitical Impact on India</div>
+    <div class="c-hi">🇮🇳 युद्ध, तेल की कीमत — ये सब भारतीय बाज़ार को प्रभावित करते हैं।</div>
+    <div class="c-en">India imports 85% of oil. Middle East conflict → oil rises → inflation → RBI hikes → market falls.</div>
+    <div class="c-ex">📌 <b>Example:</b> Iran-Israel escalates → crude +10% → Nifty −3%.</div>
+    <div class="c-tip">💡 Always check Nivesh AI Global News before trading.</div>
+  </div>
+</div>
+
+<!-- ══ 7. How to Use Nivesh AI ══ -->
+<div class="sec-head" data-sec="s7">🤖 How to Use Nivesh AI</div>
+<div class="grid" data-sec="s7">
+  <div class="card show" data-kw="getting started enter symbol nse bse sidebar analyze step tutorial">
+    <div class="c-title">🚀 Getting Started</div>
+    <div class="c-hi">🇮🇳 Symbol डालें → Exchange चुनें → Tabs में जाएं।</div>
+    <div class="c-en">1. Enter stock symbol in sidebar (e.g. ITC). 2. Select NSE/BSE. 3. Navigate tabs.</div>
+    <div class="c-ex">📌 <b>Example:</b> Type 'HDFCBANK' → NSE → analyzes HDFCBANK.NS automatically.</div>
+    <div class="c-tip">💡 Nivesh AI adds .NS suffix automatically for NSE stocks.</div>
+  </div>
+  <div class="card show" data-kw="technical tab chart rsi macd sma candlestick verdict short term indicators">
+    <div class="c-title">📊 Reading the Technical Tab</div>
+    <div class="c-hi">🇮🇳 Chart + RSI + MACD। Current momentum बताता है।</div>
+    <div class="c-en">Candlestick chart + RSI + MACD. Quick Verdict shows short/long-term signal from price action only.</div>
+    <div class="c-ex">📌 <b>Example:</b> RSI = 28 + MACD turning up → Short-term Buy signal.</div>
+    <div class="c-tip">💡 Technical signals are price-only. They don't know news or fundamentals.</div>
+  </div>
+  <div class="card show" data-kw="prediction tab forecast days slider run consensus box result ensemble">
+    <div class="c-title">🔮 Reading the Prediction Tab</div>
+    <div class="c-hi">🇮🇳 Days चुनें → Run → Consensus box पहले पढ़ें।</div>
+    <div class="c-en">Set forecast days (7–60) → Run Nivesh AI Prediction → Read <b>Consensus box first</b>.</div>
+    <div class="c-ex">📌 <b>Example:</b> 30-day forecast: ⚠️ Mixed Signals → Don't buy yet.</div>
+    <div class="c-tip">💡 Always read the Consensus box FIRST — it's the final reconciled recommendation.</div>
+  </div>
+  <div class="card show" data-kw="news tab fetch india global sentiment war rbi fii analysis live">
+    <div class="c-title">📰 Using the News Tab</div>
+    <div class="c-hi">🇮🇳 'Fetch News' → India + Global news अलग-अलग देखें।</div>
+    <div class="c-en">Click 'Fetch &amp; Analyse News' → live India + Global news, analyzed by Nivesh AI.</div>
+    <div class="c-ex">📌 <b>Example:</b> Bullish India news + bearish global oil news = mixed sentiment.</div>
+    <div class="c-tip">💡 Always fetch news before investing. Sentiment adjusts the prediction.</div>
+  </div>
+  <div class="card show" data-kw="investment calculator rupees amount shares projected profit loss best worst case">
+    <div class="c-title">💰 Investment Calculator</div>
+    <div class="c-hi">🇮🇳 ₹ amount डालें → shares, projected value, P&amp;L मिलेगा।</div>
+    <div class="c-en">Enter investment → see projected returns based on ensemble forecast with best/worst case.</div>
+    <div class="c-ex">📌 <b>Example:</b> ₹50,000 in ITC → projected ₹51,090 in 30 days.</div>
+    <div class="c-tip">💡 Use Best Case and Worst Case to understand the full risk range.</div>
+  </div>
+  <div class="card show" data-kw="ask questions chat query hindi english advisor suggest button">
+    <div class="c-title">💬 Asking Questions</div>
+    <div class="c-hi">🇮🇳 कोई भी सवाल पूछें — हिंदी में भी।</div>
+    <div class="c-en">Go to Ask Questions tab and type any question. Nivesh AI answers in detail. Hindi works too.</div>
+    <div class="c-ex">📌 <b>Example:</b> "Should I buy ITC now?" or "ITC ke risks kya hain?"</div>
+    <div class="c-tip">💡 Use the suggested question buttons for quick one-tap analysis.</div>
+  </div>
+</div>
+
+<!-- NO RESULTS -->
+<div class="no-res" id="noRes">
+  <h2>🤔 "<span id="noResTerm"></span>" नहीं मिला</h2>
+  <p>यह topic अभी Gyan Kendra में नहीं है।<br>
+  <b>क्या आप चाहते हैं कि हम इसे जोड़ें?</b><br>
+  WhatsApp करें — हम <b>24 घंटे में</b> add कर देंगे! 🚀</p>
+  <a class="wa-btn" id="waBtn" href="#" target="_blank">💬 इस Topic को Gyan Kendra में जोड़वाएं</a>
+  <div class="wa-note">+91 95573 40005 · निःशुल्क · हिंदी या English</div>
+</div>
+
+</div><!-- end #root -->
+
+<!-- ALWAYS VISIBLE: suggest bar -->
+<div class="wa-bar">
+  <div class="wa-bar-text">
+    <h3>💡 कोई topic missing है? Add करवाएं!</h3>
+    <p>To add a new topic to Gyan Kendra — WhatsApp us. We'll add it within 24 hours.</p>
+  </div>
+  <a class="wa-btn-sm"
+     href="https://wa.me/919557340005?text=Namaste!%20Main%20Gyan%20Kendra%20mein%20ek%20naya%20topic%20add%20karwana%20chahta%20hoon.%20Topic%3A%20"
+     target="_blank">💬 WhatsApp us to Add Topic</a>
+</div>
+
+<div class="footer">
+  🎓 <b>Nivesh AI Gyan Kendra</b> — पहले सीखो, फिर निवेश करो। 🇮🇳<br>
+  From RSI to geopolitics — your complete stock market guide.
+</div>
+
+<script>
+const WA = "919557340005";
+
+// Cache all card elements once on load
+const allCards = Array.from(document.querySelectorAll(".card"));
+const secHeads = Array.from(document.querySelectorAll(".sec-head"));
+const secGrids = Array.from(document.querySelectorAll(".grid[data-sec]"));
+
+// Store original card HTML for re-highlighting
+allCards.forEach(c => c._origHTML = c.innerHTML);
+
+function enc(t){ return encodeURIComponent(t); }
+
+function escRe(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+document.getElementById("q").addEventListener("input", function(){
+  search(this.value);
+});
+
+function clearQ(){
+  const box = document.getElementById("q");
+  box.value = "";
+  search("");
+  box.focus();
+}
+
+function search(raw){
+  const q = raw.trim().toLowerCase();
+  const clr = document.getElementById("clr");
+  const badge = document.getElementById("badge");
+  const noRes = document.getElementById("noRes");
+  const noResTerm = document.getElementById("noResTerm");
+  const waBtn = document.getElementById("waBtn");
+
+  clr.style.display = q ? "block" : "none";
+
+  // Restore all cards to original HTML first
+  allCards.forEach(c => { c.innerHTML = c._origHTML; });
+
+  if(!q){
+    // Show everything in original layout
+    secHeads.forEach(h => h.style.display = "");
+    secGrids.forEach(g => g.style.display = "");
+    allCards.forEach(c => { c.classList.add("show"); c.classList.remove("top-match"); });
+    noRes.style.display = "none";
+    badge.textContent = "";
+    // Remove flat results if any
+    const flat = document.getElementById("flatRes");
+    if(flat) flat.remove();
+    return;
+  }
+
+  // Score all cards
+  const scored = allCards.map(card => {
+    const kw   = (card.getAttribute("data-kw") || "").toLowerCase();
+    const title = (card.querySelector(".c-title") || {}).textContent || "";
+    const tl = title.toLowerCase();
+    let s = 0;
+    if(tl === q)           s += 12;
+    else if(tl.startsWith(q)) s += 8;
+    else if(tl.includes(q))   s += 5;
+    if(kw.includes(q))        s += 3;
+    // also check visible text
+    const body = card.textContent.toLowerCase();
+    if(body.includes(q))      s += 1;
+    return { card, score: s };
+  }).filter(x => x.score > 0)
+    .sort((a,b) => b.score - a.score);
+
+  // Hide section layout
+  secHeads.forEach(h => h.style.display = "none");
+  secGrids.forEach(g => g.style.display = "none");
+  allCards.forEach(c => c.classList.remove("show","top-match"));
+
+  // Remove old flat results
+  const oldFlat = document.getElementById("flatRes");
+  if(oldFlat) oldFlat.remove();
+
+  const noResEl = document.getElementById("noRes");
+
+  if(scored.length === 0){
+    noRes.style.display = "block";
+    noResTerm.textContent = raw;
+    waBtn.href = "https://wa.me/" + WA + "?text=" + enc('Namaste! Mujhe Nivesh AI Gyan Kendra mein "' + raw + '" topic add karna hai. Kripya isko include karein.');
+    badge.textContent = "";
+    return;
+  }
+
+  noRes.style.display = "none";
+
+  // Build flat grid
+  const flat = document.createElement("div");
+  flat.id = "flatRes";
+  flat.className = "grid";
+
+  const re = new RegExp("(" + escRe(q) + ")", "gi");
+
+  scored.forEach(({card, score}) => {
+    const clone = card.cloneNode(true);
+    clone.classList.add("show");
+    if(score >= 5) clone.classList.add("top-match");
+
+    // Highlight in visible text nodes (title, hi, en, ex, tip)
+    [".c-title",".c-hi",".c-en",".c-ex",".c-tip"].forEach(sel => {
+      const el = clone.querySelector(sel);
+      if(el) el.innerHTML = el.innerHTML.replace(re, "<mark>$1</mark>");
+    });
+    flat.appendChild(clone);
+  });
+
+  // Insert flat grid before no-result div
+  document.getElementById("root").insertBefore(flat, noResEl);
+
+  badge.innerHTML = "<b>" + scored.length + "</b> result" + (scored.length > 1 ? "s" : "") + " for <b>\"" + raw + "\"</b>";
+}
+</script>
+</body>
+</html>

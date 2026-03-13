@@ -1,0 +1,9 @@
+streamlit
+pandas
+yfinance
+plotly
+finta
+python-dotenv
+langchain-google-genai
+langchain-core
+scikit-learn
