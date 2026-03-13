@@ -16,6 +16,7 @@
 **pycache**/
 *.py[cod]
 *$py.class
+_pycache_
 
 # =========================
 
